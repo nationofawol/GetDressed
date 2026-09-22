@@ -168,7 +168,7 @@
     }
 
     /* Container: one column, left aligned */
-    .type-options {
+    .color-options {
       display: flex;
       flex-direction: column;
       gap: 10px;
@@ -176,7 +176,7 @@
     }
 
     /* Label styling */
-    .type-options label {
+    .color-options label {
       color: #b7008c;
       font-weight: 500;
       display: flex;
@@ -186,7 +186,7 @@
     }
 
     /* Hide the default checkbox */
-    .type-options input[type="checkbox"] {
+    .color-options input[type="checkbox"] {
       appearance: none;
       -webkit-appearance: none;
       width: 20px;
@@ -199,13 +199,13 @@
     }
 
     /* Purple fill when checked */
-    .type-options input[type="checkbox"]:checked {
+    .color-options input[type="checkbox"]:checked {
       background-color: #b7008c;
       border-color: #b7008c;
     }
 
     /* Checkmark */
-    .type-options input[type="checkbox"]:checked::after {
+    .color-options input[type="checkbox"]:checked::after {
       content: "✔";
       color: white;
       font-size: 14px;
@@ -399,7 +399,6 @@ async function loadExistingItem(id) {
   document.getElementById("ItemTitle").value = data.title || "";
   document.getElementById("TypeofClothing").value = data.type || "";
   document.getElementById("PatternColor").value = data.quality || "";
-  document.getElementById("color-options").value = data.color || "";
   document.getElementById("Appropriateness").value = data.appropriateness || "";
   document.getElementById("Functionality").value = data.functionality || "";
   document.getElementById("TopType").value = data.toptype || "";
@@ -410,10 +409,11 @@ async function loadExistingItem(id) {
   // PREFILL TYPE CHECKBOXES
   if (Array.isArray(data.color)) {
     data.color.forEach(c => {
-      const checkbox = document.querySelector(`.color-check[value="${c}"]`);
-      if (checkbox) checkbox.checked = true;
+        const checkbox = document.querySelector(`.type-check[value="${c}"]`);
+        if (checkbox) checkbox.checked = true;
     });
-  }
+    }
+
 
   
   // Change button text
@@ -422,7 +422,7 @@ async function loadExistingItem(id) {
 
 document.getElementById("saveIdeaBtn").addEventListener("click", async () => {
   const title = document.getElementById("ItemTitle").value;
-  const color = Array.from(document.querySelectorAll(".color-check:checked"))
+  const color = Array.from(document.querySelectorAll(".type-check:checked"))
                 .map(cb => cb.value);
   const type = document.getElementById("TypeofClothing").value;
   const quality = document.getElementById("PatternColor").value;
