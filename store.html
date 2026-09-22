@@ -234,55 +234,88 @@
     <input id="ideaTitle" type="text" placeholder="Enter general description">
 
     <label>Type of Clothing Item</label>
-    <select id="ideaDifficulty">
+    <select id="TypeofClothing">
       <option>Top</option>
       <option>Bottom</option>
       <option>Dress</option>
     </select>
 
-    <label>Top Type</label>
-    <select id="ideaPriority">
-      <option>Short Sleeve</option>
-      <option>Sleeveless</option>
-      <option>Sweater</option>
-      <option>Sweater Vest</option>
-      <option>Sweater Vest</option>
+    <label>Pattern/Color</label>
+    <select id="PatternColor">
+      <option>Solid</option>
+      <option>Patterned</option>
+      <option>Printed</option>
     </select>
 
-    <label>Top Type</label>
-    <select id="ideaPriority">
-      <option>Short Sleeve</option>
-      <option>Sleeveless</option>
-      <option>Sweater</option>
-      <option>Sweater Vest</option>
-      <option>Sweater Vest</option>
+
+    <label>Colors</label>
+    <div class="type-options">
+      <label><input type="checkbox" class="type-check" value="Red"> Red</label>
+      <label><input type="checkbox" class="type-check" value="Orange"> Orange</label>
+      <label><input type="checkbox" class="type-check" value="Yellow"> Yellow</label>
+      <label><input type="checkbox" class="type-check" value="Green"> Green</label>
+      <label><input type="checkbox" class="type-check" value="Blue"> Blue</label>
+      <label><input type="checkbox" class="type-check" value="Purple"> Purple</label>
+      <label><input type="checkbox" class="type-check" value="Pink"> Pink</label>
+      <label><input type="checkbox" class="type-check" value="Black"> Black</label>
+      <label><input type="checkbox" class="type-check" value="White"> White</label>
+    </div>
+
+    <label>How Scandalous</label>
+    <select id="DressType">
+      <option>Mormon</option>
+      <option>Work Appropriate</option>
+      <option>Casual</option>
+      <option>Hoe Shit</option>
     </select>
 
-    <label>Status</label>
-    <select id="ideaStatus">
-      <option>Not Started</option>
-      <option>In Progress</option>
-      <option>Finished</option>
+    <label>How Functional/Comfortable</label>
+    <select id="DressType">
+      <option>Very</option>
+      <option>Somewhat</option>
+      <option>Okay</option>
+      <option>Not</option>
     </select>
+
+
+   <label>Top Type</label>
+    <div id="topOptions">
+    <select id="TopType">
+        <option>Short Sleeve</option>
+        <option>Sleeveless</option>
+        <option>Sweater</option>
+        <option>Sweater Vest</option>
+    </select>
+    </div>
+
+    <label>Bottom Type</label>
+    <div id="bottomOptions">
+    <select id="BottomType">
+        <option>Short Pants</option>
+        <option>Long Pants</option>
+        <option>Short Skirt</option>
+        <option>Long Skirt</option>
+    </select>
+    </div>
+
+    <label>Dress Type</label>
+    <div id="dressOptions">
+    <select id="DressType">
+        <option>Short Dress</option>
+        <option>Long Dress</option>
+    </select>
+    </div>
+
+
 
     <div id="uploadSection" style="display:none;">
-    <label>Upload Photos</label>
+    <label>Upload Pic!</label>
     <input type="file" id="ideaPhotos" accept="image/*" multiple>
     <div id="photoPreview" class="photo-preview"></div>
     </div>
 
 
-    <label>Number of Steps</label>
-    <input type="number" id="stepCount" min="1" max="20" placeholder="Enter number of steps">
-
-    <div id="stepsContainer"></div>
-
-    <button id="saveIdeaBtn" class="submit-btn">Save Idea</button>
-
-    <div class="retroactive-link">
-         <a href="retroactiveadd.html" class="nav-btn">Add to Archive</a>
-    </div>
-
+    <button id="saveIdeaBtn" class="submit-btn">Save Item</button>
 
   </div>
 
