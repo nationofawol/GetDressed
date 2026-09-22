@@ -112,7 +112,7 @@
     background: #ffffff;
     border-radius: 10px;
     color: #b7008c;
-    display: none; /* stays hidden until Finished is selected */
+
     }
 
     /* Upload label */
@@ -214,6 +214,13 @@
       left: 3px;
     }
 
+    #topOptions,
+    #bottomOptions,
+    #dressOptions {
+        display: none;
+    }
+
+
 
   </style>
 </head>
@@ -278,8 +285,8 @@
     </select>
 
 
-   <label>Top Type</label>
     <div id="topOptions">
+    <label>Top Type</label>
     <select id="TopType">
         <option>Short Sleeve</option>
         <option>Sleeveless</option>
@@ -288,8 +295,8 @@
     </select>
     </div>
 
-    <label>Bottom Type</label>
     <div id="bottomOptions">
+    <label>Bottom Type</label>
     <select id="BottomType">
         <option>Short Pants</option>
         <option>Long Pants</option>
@@ -298,8 +305,10 @@
     </select>
     </div>
 
-    <label>Dress Type</label>
+
+
     <div id="dressOptions">
+    <label>Dress Type</label>
     <select id="DressType">
         <option>Short Dress</option>
         <option>Long Dress</option>
@@ -308,7 +317,7 @@
 
 
 
-    <div id="uploadSection" style="display:none;">
+    <div id="uploadSection">
     <label>Upload Pic!</label>
     <input type="file" id="ideaPhotos" accept="image/*" multiple>
     <div id="photoPreview" class="photo-preview"></div>
@@ -320,15 +329,32 @@
   </div>
 
   <!-- FIREBASE + SAVE LOGIC -->
+
+
+  <script>
+    document.getElementById("TypeofClothing").addEventListener("change", function () {
+        const value = this.value;
+
+        // Hide all
+        document.getElementById("topOptions").style.display = "none";
+        document.getElementById("bottomOptions").style.display = "none";
+        document.getElementById("dressOptions").style.display = "none";
+
+        // Show only the selected one
+        if (value === "Top") {
+            document.getElementById("topOptions").style.display = "block";
+        } else if (value === "Bottom") {
+            document.getElementById("bottomOptions").style.display = "block";
+        } else if (value === "Dress") {
+            document.getElementById("dressOptions").style.display = "block";
+        }
+    });
+</script>
+
+
+
   <script type="module">
-          const statusSelect = document.getElementById("ideaStatus");
       const uploadSection = document.getElementById("uploadSection");
-
-      statusSelect.addEventListener("change", () => {
-        uploadSection.style.display =
-          statusSelect.value === "Finished" ? "block" : "none";
-      });
-
 
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { 
@@ -339,12 +365,13 @@
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
     const firebaseConfig = {
-      apiKey: "AIzaSyCLfSyJTrfKJ11y0-OD-tqce51hAhB9ubk",
-      authDomain: "artportfolio-7fb57.firebaseapp.com",
-      projectId: "artportfolio-7fb57",
-      storageBucket: "artportfolio-7fb57.firebasestorage.app",
-      messagingSenderId: "221364362709",
-      appId: "1:221364362709:web:4ad550bd8970302ef0715c"
+        apiKey: "AIzaSyCdKB6yoYhJpN2cdSj29v_IKiYet88jOaY",
+        authDomain: "gs-closet.firebaseapp.com",
+        projectId: "gs-closet",
+        storageBucket: "gs-closet.firebasestorage.app",
+        messagingSenderId: "851094693820",
+        appId: "1:851094693820:web:c33a7f98acbee0302fedb9",
+        measurementId: "G-SE8P9F671F"
     };
 
 const app = initializeApp(firebaseConfig);
