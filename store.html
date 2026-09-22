@@ -238,7 +238,7 @@
     <h1>New Idea</h1>
 
     <label>Title of Clothing Item</label>
-    <input id="ideaTitle" type="text" placeholder="Enter general description">
+    <input id="ItemTitle" type="text" placeholder="Enter general description">
 
     <label>Type of Clothing Item</label>
     <select id="TypeofClothing">
@@ -256,7 +256,7 @@
 
 
     <label>Colors</label>
-    <div class="type-options">
+    <div class="color-options">
       <label><input type="checkbox" class="type-check" value="Red"> Red</label>
       <label><input type="checkbox" class="type-check" value="Orange"> Orange</label>
       <label><input type="checkbox" class="type-check" value="Yellow"> Yellow</label>
@@ -269,7 +269,7 @@
     </div>
 
     <label>How Scandalous</label>
-    <select id="DressType">
+    <select id="Appropriateness">
       <option>Mormon</option>
       <option>Work Appropriate</option>
       <option>Casual</option>
@@ -277,7 +277,7 @@
     </select>
 
     <label>How Functional/Comfortable</label>
-    <select id="DressType">
+    <select id="Functionality">
       <option>Very</option>
       <option>Somewhat</option>
       <option>Okay</option>
@@ -382,155 +382,81 @@ const params = new URLSearchParams(window.location.search);
 const editId = params.get("id");
 
 // Load existing idea if editing
-if (editId) loadExistingIdea(editId);
+if (editId) loadExistingItem(editId);
 
-async function loadExistingIdea(id) {
-  const docRef = doc(db, "ideas", id);
+async function loadExistingItem(id) {
+  const docRef = doc(db, "items", id);
   const snap = await getDoc(docRef);
 
   if (!snap.exists()) {
-    alert("Idea not found.");
+    alert("Item not found.");
     return;
   }
 
   const data = snap.data();
 
   // PREFILL FIELDS
-  document.getElementById("ideaTitle").value = data.title || "";
-  document.getElementById("ideaMaterials").value = data.materials || "";
-  document.getElementById("ideaDifficulty").value = data.difficulty || "";
-  document.getElementById("ideaPriority").value = data.priority || "";
-  document.getElementById("ideaStatus").value = data.status || "";
+  document.getElementById("ItemTitle").value = data.title || "";
+  document.getElementById("TypeofClothing").value = data.type || "";
+  document.getElementById("PatternColor").value = data.quality || "";
+  document.getElementById("color-options").value = data.color || "";
+  document.getElementById("Appropriateness").value = data.appropriateness || "";
+  document.getElementById("Functionality").value = data.functionality || "";
+  document.getElementById("TopType").value = data.toptype || "";
+  document.getElementById("BottomType").value = data.bottomtype || "";
+  document.getElementById("DressType").value = data.dresstype || "";
+
 
   // PREFILL TYPE CHECKBOXES
-  if (Array.isArray(data.type)) {
-    data.type.forEach(t => {
-      const checkbox = document.querySelector(`.type-check[value="${t}"]`);
+  if (Array.isArray(data.color)) {
+    data.color.forEach(c => {
+      const checkbox = document.querySelector(`.color-check[value="${c}"]`);
       if (checkbox) checkbox.checked = true;
     });
   }
 
-  // PREFILL STEPS
-  if (data.steps) {
-    document.getElementById("stepCount").value = data.steps.length;
-    generateStepBlocks(data.steps.length);
-
-    const blocks = document.querySelectorAll(".step-block");
-    data.steps.forEach((step, i) => {
-      blocks[i].querySelector(".step-title").value = step.title;
-      blocks[i].querySelector(".step-materials").value = step.materials;
-      blocks[i].querySelector(".step-difficulty").value = step.difficulty;
-      blocks[i].querySelector(".step-status").value = step.status;
-      blocks[i].querySelector(".step-time").value = step.time;
-    });
-  }
-
+  
   // Change button text
-  document.getElementById("saveIdeaBtn").textContent = "Update Idea";
+  document.getElementById("saveIdeaBtn").textContent = "Update Item";
 }
-
-// STEP GENERATOR
-function generateStepBlocks(count) {
-  const container = document.getElementById("stepsContainer");
-  container.innerHTML = "";
-
-  for (let i = 1; i <= count; i++) {
-    const step = document.createElement("div");
-    step.className = "step-block";
-
-    step.innerHTML = `
-      <h3>Step ${i}</h3>
-
-      <label>Step Title</label>
-      <input type="text" class="step-title">
-
-      <label>Materials Needed</label>
-      <textarea class="step-materials"></textarea>
-
-      <label>Difficulty</label>
-      <select class="step-difficulty">
-        <option>Easy</option>
-        <option>Medium</option>
-        <option>Hard</option>
-      </select>
-
-      <label>Status</label>
-      <select class="step-status">
-        <option>Not Started</option>
-        <option>Finished</option>
-      </select>
-
-      <label>Approx. Time</label>
-      <input type="text" class="step-time" placeholder="e.g., 10 min">
-    `;
-
-    container.appendChild(step);
-  }
-}
-
-document.getElementById("stepCount").addEventListener("input", function () {
-  const count = parseInt(this.value);
-  if (count > 0) generateStepBlocks(count);
-});
 
 document.getElementById("saveIdeaBtn").addEventListener("click", async () => {
-  const title = document.getElementById("ideaTitle").value;
-  const type = Array.from(document.querySelectorAll(".type-check:checked"))
+  const title = document.getElementById("ItemTitle").value;
+  const color = Array.from(document.querySelectorAll(".color-check:checked"))
                 .map(cb => cb.value);
-  const materials = document.getElementById("ideaMaterials").value;
-  const difficulty = document.getElementById("ideaDifficulty").value;
-  const priority = document.getElementById("ideaPriority").value;
-  const status = document.getElementById("ideaStatus").value;
+  const type = document.getElementById("TypeofClothing").value;
+  const quality = document.getElementById("PatternColor").value;
+  const appropriateness = document.getElementById("Appropriateness").value;
+  const functionality = document.getElementById("Functionality").value;
+  const toptype = document.getElementById("TopType").value;
+  const bottomtype = document.getElementById("BottomType").value;
+  const dresstype = document.getElementById("DressType").value;
 
-  // Build steps array
-  const steps = [];
-  document.querySelectorAll(".step-block").forEach(block => {
-    steps.push({
-      title: block.querySelector(".step-title").value,
-      materials: block.querySelector(".step-materials").value,
-      difficulty: block.querySelector(".step-difficulty").value,
-      status: block.querySelector(".step-status").value,
-      time: block.querySelector(".step-time").value
-    });
-  });
-
-  // Upload photos only if Finished
-  let photoURLs = [];
-  const photoFiles = document.getElementById("ideaPhotos").files;
-
-  if (status === "Finished" && photoFiles.length > 0) {
-    const storage = getStorage(app);
-
-    for (let file of photoFiles) {
-      const storageRef = ref(storage, `ideaPhotos/${Date.now()}_${file.name}`);
-      await uploadBytes(storageRef, file);
-      const url = await getDownloadURL(storageRef);
-      photoURLs.push(url);
-    }
-  }
 
   // Build Firestore object
   const ideaData = {
     title,
     type,
-    materials,
-    difficulty,
-    priority,
-    status,
-    steps,
+    color,
+    quality,
+    appropriateness,
+    functionality,
+    toptype,
+    bottomtype,
+    dresstype,
     photos: photoURLs,
     createdAt: new Date()
   };
 
   // Save or update
   if (editId) {
-    await updateDoc(doc(db, "ideas", editId), ideaData);
+    await updateDoc(doc(db, "items", editId), ideaData);
   } else {
-    await addDoc(collection(db, "ideas"), ideaData);
+    await addDoc(collection(db, "items"), ideaData);
   }
 
-  alert("Idea saved!");
-  window.location.href = "list.html";
+  alert("Item saved!");
+  window.location.href = "closet.html";
 });
 
 </script>
