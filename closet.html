@@ -147,15 +147,10 @@
 
   
   <script type="module">
-      const uploadSection = document.getElementById("uploadSection");
-
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { 
-      getFirestore, collection, addDoc, doc, getDoc, updateDoc 
+        getFirestore, collection, getDocs, query 
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-    import { 
-      getStorage, ref, uploadBytes, getDownloadURL 
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyCdKB6yoYhJpN2cdSj29v_IKiYet88jOaY",
@@ -167,61 +162,59 @@
         measurementId: "G-SE8P9F671F"
     };
 
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+    async function loadGallery() {
+        const gallery = document.getElementById("galleryGrid");
 
-  async function loadGallery() {
-  const gallery = document.getElementById("galleryGrid");
+        try {
+        const q = query(collection(db, "items"));
+        const snapshot = await getDocs(q);
+        const allProjects = [];
 
-  // Load only finished projects
-  const q = query(
-    collection(db, "items")
-  );
+        snapshot.forEach(doc => {
+            allProjects.push({ id: doc.id, ...doc.data() });
+        });
 
-  const snapshot = await getDocs(q);
-  const allProjects = [];
+        renderFiltered(allProjects);
+        } catch (err) {
+        console.error("Failed to load gallery:", err);
+        gallery.innerHTML = "<p>Couldn't load items.</p>";
+        }
+    }
 
-  snapshot.forEach(doc => {
-    allProjects.push({ id: doc.id, ...doc.data() });
-  });
+    function renderFiltered(items) {
+        const gallery = document.getElementById("galleryGrid");
+        gallery.innerHTML = "";
 
-  function renderFiltered() {
-    gallery.innerHTML = "";
-      filtered.forEach(data => {
-      const thumb = data.photos?.[0] || "https://via.placeholder.com/300x200?text=No+Image";
+        items.forEach(data => {
+        const thumb = data.photos?.[0] || "https://via.placeholder.com/300x200?text=No+Image";
 
-      const card = document.createElement("div");
-      card.className = "project-card";
+        const card = document.createElement("div");
+        card.className = "project-card";
 
-      // Make the entire card clickable
-      card.addEventListener("click", () => {
-        window.location.href = `../closet.html?id=${data.id}`;
-      });
+        card.addEventListener("click", () => {
+            window.location.href = `closet.html?id=${data.id}`;
+        });
 
-      card.innerHTML = `
-        <img class="project-thumb" src="${thumb}">
-        <div class="project-info">${data.title}</div>
+        card.innerHTML = `
+            <img class="project-thumb" src="${thumb}">
+            <div class="project-info">${data.title}</div>
+            <div class="project-hover">
+            <div><strong>Title:</strong> ${data.title || "N/A"}</div>
+            <div><strong>Quality:</strong> ${data.quality || "N/A"}</div>
+            <div><strong>Type:</strong> ${data.type || "N/A"}</div>
+            <div><strong>Appropriateness:</strong> ${data.appropriateness || "N/A"}</div>
+            <div><strong>Functionality:</strong> ${data.functionality || "N/A"}</div>
+            </div>
+        `;
 
-        <div class="project-hover">
-          <div><strong>Title:</strong> ${data.title || "N/A"}</div>
-          <div><strong>Quality:</strong> ${data.quality || "N/A"}</div>
-          <div><strong>Type:</strong> ${data.type || "N/A"}</div>
-          <div><strong>Appropriateness:</strong> ${data.appropriateness || "N/A"}</div>
-          <div><strong>Functionality:</strong> ${data.functionality || "N/A"}</div>
-        </div>
-      `;
+        gallery.appendChild(card);
+        });
+  }
 
-      gallery.appendChild(card);
-    });
-
-    
-  // Initial render
-  renderFiltered();
-}
-
-loadGallery();
-
+  loadGallery();
 </script>
 
 
