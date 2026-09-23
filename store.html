@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Add a New Item</title>
+  <!-- is this thing on -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600&display=swap" rel="stylesheet">
@@ -423,6 +424,8 @@ async function loadExistingItem(id) {
   document.getElementById("saveItemBtn").textContent = "Update Item";
 }
 
+let photoURLs = [];
+
 document.getElementById("saveItemBtn").addEventListener("click", async () => {
   const title = document.getElementById("ItemTitle").value;
   const color = Array.from(document.querySelectorAll(".type-check:checked"))
@@ -435,6 +438,20 @@ document.getElementById("saveItemBtn").addEventListener("click", async () => {
   const bottomtype = document.getElementById("BottomType").value;
   const dresstype = document.getElementById("DressType").value;
 
+  // ⭐ UPLOAD PHOTOS
+  const photoFiles = document.getElementById("itemPhotos").files;
+  photoURLs = [];
+
+  if (photoFiles.length > 0) {
+    const storage = getStorage(app);
+
+    for (let file of photoFiles) {
+      const storageRef = ref(storage, `itemPhotos/${Date.now()}_${file.name}`);
+      await uploadBytes(storageRef, file);
+      const url = await getDownloadURL(storageRef);
+      photoURLs.push(url);
+    }
+  }
 
   // Build Firestore object
   const itemData = {
@@ -461,6 +478,7 @@ document.getElementById("saveItemBtn").addEventListener("click", async () => {
   alert("Item saved!");
   window.location.href = "closet.html";
 });
+
 
 </script>
 
