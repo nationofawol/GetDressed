@@ -47,7 +47,6 @@
       max-width: 450px;
       height: 640px;
       margin: 30px auto;
-      
     }
 
     .pair-stack {
@@ -60,7 +59,10 @@
     }
 
     .hanger {
-      background: white;
+      background-image: url('Hanger.png'); 
+      background-size: 250px 250px;
+      background-repeat: no-repeat;
+      background-position: center;
       color: #b7008c;
       border-radius: 12px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.2);
@@ -101,6 +103,12 @@
       z-index: 1;
       transition: opacity 0.25s ease, z-index 0s;
     }
+
+    .dress-hanger {
+     background: none;        /* no hanger image */
+     box-shadow: none;        /* optional */
+    }
+
 
     /* Whichever layer is "active" sits on top and is fully opaque;
        the other fades down and behind. */
@@ -163,7 +171,7 @@
       </div>
     </div>
 
-    <div class="hanger layer-back" id="dressHanger">
+    <div class="dress-hanger layer-back" id="dressHanger">
       <div class="empty-msg">No dress yet</div>
     </div>
   </div>
