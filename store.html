@@ -124,7 +124,7 @@
     }
 
     /* File input styling */
-    #ideaPhotos {
+    #itemPhotos {
     background: #fff;
     border: 2px solid #b7008c;
     padding: 10px;
@@ -235,7 +235,7 @@
     <a href="index.html" class="nav-btn">Home!</a>
   </div>
 
-    <h1>New Idea</h1>
+    <h1>New Item</h1>
 
     <label>Title of Clothing Item</label>
     <input id="ItemTitle" type="text" placeholder="Enter general description">
@@ -322,12 +322,12 @@
 
     <div id="uploadSection">
     <label>Upload Pic!</label>
-    <input type="file" id="ideaPhotos" accept="image/*" multiple>
+    <input type="file" id="itemPhotos" accept="image/*" multiple>
     <div id="photoPreview" class="photo-preview"></div>
     </div>
 
 
-    <button id="saveIdeaBtn" class="submit-btn">Save Item</button>
+    <button id="saveItemBtn" class="submit-btn">Save Item</button>
 
   </div>
 
@@ -420,10 +420,10 @@ async function loadExistingItem(id) {
 
   
   // Change button text
-  document.getElementById("saveIdeaBtn").textContent = "Update Item";
+  document.getElementById("saveItemBtn").textContent = "Update Item";
 }
 
-document.getElementById("saveIdeaBtn").addEventListener("click", async () => {
+document.getElementById("saveItemBtn").addEventListener("click", async () => {
   const title = document.getElementById("ItemTitle").value;
   const color = Array.from(document.querySelectorAll(".type-check:checked"))
                 .map(cb => cb.value);
@@ -437,7 +437,7 @@ document.getElementById("saveIdeaBtn").addEventListener("click", async () => {
 
 
   // Build Firestore object
-  const ideaData = {
+  const itemData = {
     title,
     type,
     color,
@@ -453,9 +453,9 @@ document.getElementById("saveIdeaBtn").addEventListener("click", async () => {
 
   // Save or update
   if (editId) {
-    await updateDoc(doc(db, "items", editId), ideaData);
+    await updateDoc(doc(db, "items", editId), itemData);
   } else {
-    await addDoc(collection(db, "items"), ideaData);
+    await addDoc(collection(db, "items"), itemData);
   }
 
   alert("Item saved!");
