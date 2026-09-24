@@ -8,6 +8,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600&display=swap" rel="stylesheet">
 
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       font-family: 'Josefin Sans', sans-serif;
       background: #b7008c;
@@ -41,7 +45,6 @@
       background: #e6762d;
     }
 
-    /* Stack: top+bottom column, and dress absolutely overlaid on top */
     .closet-container {
       position: relative;
       max-width: 450px;
@@ -92,8 +95,7 @@
 
     #dressHanger {
       position: absolute;
-      top: 0;
-      left: 0;
+      inset: 0;
       width: 100%;
       height: 100%;
       z-index: 1;
@@ -101,13 +103,10 @@
     }
 
     .dress-hanger {
-     background: none;        /* no hanger image */
-     box-shadow: none;        /* optional */
+      background: none;
+      box-shadow: none;
     }
 
-
-    /* Whichever layer is "active" sits on top and is fully opaque;
-       the other fades down and behind. */
     .layer-back {
       z-index: 1;
       opacity: 0;
@@ -120,32 +119,59 @@
       pointer-events: auto;
     }
 
-    .controls {
-      text-align: center;
-      margin-top: 10px;
+    .controls-wrapper {
+      max-width: 450px;
+      margin: 0 auto;
     }
 
-    .controls button {
+    .control-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 12px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 10px;
+      padding: 8px 12px;
+    }
+
+    .control-row button {
       background: #fe8e3d;
       color: white;
       border: none;
-      padding: 14px 22px;
-      font-size: 16px;
+      padding: 10px 18px;
+      font-size: 15px;
       font-weight: 600;
       border-radius: 8px;
       cursor: pointer;
       transition: 0.2s;
-      margin: 0 8px;
     }
 
-    .controls button:hover {
+    .control-row button:hover {
       background: #e6762d;
     }
 
+    .laundry-toggle {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 14px;
+      color: #ffffff;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .laundry-toggle input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+      accent-color: #fe8e3d;
+    }
+
     #statusLine {
-      margin-top: 10px;
+      margin-top: 12px;
       font-size: 14px;
       color: #ffe0f5;
+      text-align: center;
     }
   </style>
 </head>
@@ -167,140 +193,218 @@
       </div>
     </div>
 
-    <div class="dress-hanger layer-back" id="dressHanger">
+    <div class="hanger dress-hanger layer-back" id="dressHanger">
       <div class="empty-msg">No dress yet</div>
     </div>
   </div>
 
-  <div class="controls">
-    <button id="topBtn">Next Top</button>
-    <button id="bottomBtn">Next Bottom</button>
-    <button id="dressBtn">Next Dress</button>
+  <div class="controls-wrapper">
+
+    <div class="control-row">
+      <button id="topBackBtn">← Back Top</button>
+      <label class="laundry-toggle">
+        <input type="checkbox" id="topLaundryCheck"> Laundry
+      </label>
+      <button id="topNextBtn">Top Next →</button>
+    </div>
+
+    <div class="control-row">
+      <button id="bottomBackBtn">← Back Bottom</button>
+      <label class="laundry-toggle">
+        <input type="checkbox" id="bottomLaundryCheck"> Laundry
+      </label>
+      <button id="bottomNextBtn">Bottom Next →</button>
+    </div>
+
+    <div class="control-row">
+      <button id="dressBackBtn">← Back Dress</button>
+      <label class="laundry-toggle">
+        <input type="checkbox" id="dressLaundryCheck"> Laundry
+      </label>
+      <button id="dressNextBtn">Dress Next →</button>
+    </div>
+
     <div id="statusLine"></div>
   </div>
 
   <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import {
-    getFirestore, collection, getDocs, query
-  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import {
+      getFirestore, collection, getDocs, query, doc, updateDoc
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-  const firebaseConfig = {
-      apiKey: "AIzaSyCdKB6yoYhJpN2cdSj29v_IKiYet88jOaY",
-      authDomain: "gs-closet.firebaseapp.com",
-      projectId: "gs-closet",
-      storageBucket: "gs-closet.firebasestorage.app",
-      messagingSenderId: "851094693820",
-      appId: "1:851094693820:web:c33a7f98acbee0302fedb9",
-      measurementId: "G-SE8P9F671F"
-  };
+    const firebaseConfig = {
+        apiKey: "AIzaSyCdKB6yoYhJpN2cdSj29v_IKiYet88jOaY",
+        authDomain: "gs-closet.firebaseapp.com",
+        projectId: "gs-closet",
+        storageBucket: "gs-closet.firebasestorage.app",
+        messagingSenderId: "851094693820",
+        appId: "1:851094693820:web:c33a7f98acbee0302fedb9",
+        measurementId: "G-SE8P9F671F"
+    };
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-  let tops = [];
-  let bottoms = [];
-  let dresses = [];
+    let tops = [];
+    let bottoms = [];
+    let dresses = [];
 
-  let topIndex = -1;
-  let bottomIndex = -1;
-  let dressIndex = -1;
+    let topIndex = -1;
+    let bottomIndex = -1;
+    let dressIndex = -1;
 
-  const topHanger = document.getElementById("topHanger");
-  const bottomHanger = document.getElementById("bottomHanger");
-  const dressHanger = document.getElementById("dressHanger");
-  const pairStack = document.getElementById("pairStack");
-  const statusLine = document.getElementById("statusLine");
+    const topHanger = document.getElementById("topHanger");
+    const bottomHanger = document.getElementById("bottomHanger");
+    const dressHanger = document.getElementById("dressHanger");
+    const pairStack = document.getElementById("pairStack");
+    const statusLine = document.getElementById("statusLine");
 
-  async function loadItems() {
-    try {
-      const q = query(collection(db, "items"));
-      const snapshot = await getDocs(q);
-      snapshot.forEach(doc => {
-        const data = { id: doc.id, ...doc.data() };
-        if (data.type === "Top") tops.push(data);
-        else if (data.type === "Bottom") bottoms.push(data);
-        else if (data.type === "Dress") dresses.push(data);
-      });
-      statusLine.textContent =
-        `${tops.length} tops, ${bottoms.length} bottoms, ${dresses.length} dresses loaded`;
-    } catch (err) {
-      console.error("Failed to load items:", err);
-      statusLine.textContent = "Couldn't load items — check console.";
-    }
-  }
+    const topLaundryCheck = document.getElementById("topLaundryCheck");
+    const bottomLaundryCheck = document.getElementById("bottomLaundryCheck");
+    const dressLaundryCheck = document.getElementById("dressLaundryCheck");
 
-  function fillHanger(el, item) {
-    el.innerHTML = "";
-    const thumb = item?.photos?.[0];
+    async function loadItems() {
+      try {
+        const q = query(collection(db, "items"));
+        const snapshot = await getDocs(q);
+        snapshot.forEach(d => {
+          const data = { id: d.id, ...d.data() };
+          if (typeof data.laundry !== "boolean") data.laundry = false;
 
-    if (thumb) {
-      const img = document.createElement("img");
-      img.src = thumb;
-      el.appendChild(img);
+          if (data.type === "Top") tops.push(data);
+          else if (data.type === "Bottom") bottoms.push(data);
+          else if (data.type === "Dress") dresses.push(data);
+        });
+        statusLine.textContent =
+          `${tops.length} tops, ${bottoms.length} bottoms, ${dresses.length} dresses loaded`;
+      } catch (err) {
+        console.error("Failed to load items:", err);
+        statusLine.textContent = "Couldn't load items — check console.";
+      }
     }
 
-    const label = document.createElement("div");
-    label.className = "label";
-    label.textContent = item?.title || "Untitled";
-    el.appendChild(label);
-  }
+    function fillHanger(el, item) {
+      el.innerHTML = "";
+      const thumb = item?.photos?.[0];
 
-  function showPair() {
-    pairStack.classList.remove("layer-back");
-    pairStack.classList.add("layer-front");
-    dressHanger.classList.remove("layer-front");
-    dressHanger.classList.add("layer-back");
-  }
+      if (thumb) {
+        const img = document.createElement("img");
+        img.src = thumb;
+        el.appendChild(img);
+      }
 
-  function showDress() {
-    dressHanger.classList.remove("layer-back");
-    dressHanger.classList.add("layer-front");
-    pairStack.classList.remove("layer-front");
-    pairStack.classList.add("layer-back");
-  }
-
-  document.getElementById("topBtn").addEventListener("click", () => {
-    if (tops.length === 0) {
-      statusLine.textContent = "No tops to show.";
-      return;
+      const label = document.createElement("div");
+      label.className = "label";
+      label.textContent = item?.title || "Untitled";
+      el.appendChild(label);
     }
 
-    topIndex = (topIndex + 1) % tops.length;
-    fillHanger(topHanger, tops[topIndex]);
-
-    showPair();
-    statusLine.textContent = `Top ${topIndex + 1}/${tops.length}`;
-  });
-
-  document.getElementById("bottomBtn").addEventListener("click", () => {
-    if (bottoms.length === 0) {
-      statusLine.textContent = "No bottoms to show.";
-      return;
+    function showPair() {
+      pairStack.classList.remove("layer-back");
+      pairStack.classList.add("layer-front");
+      dressHanger.classList.remove("layer-front");
+      dressHanger.classList.add("layer-back");
     }
 
-    bottomIndex = (bottomIndex + 1) % bottoms.length;
-    fillHanger(bottomHanger, bottoms[bottomIndex]);
-
-    showPair();
-    statusLine.textContent = `Bottom ${bottomIndex + 1}/${bottoms.length}`;
-  });
-
-  document.getElementById("dressBtn").addEventListener("click", () => {
-    if (dresses.length === 0) {
-      statusLine.textContent = "No dresses to show.";
-      return;
+    function showDress() {
+      dressHanger.classList.remove("layer-back");
+      dressHanger.classList.add("layer-front");
+      pairStack.classList.remove("layer-front");
+      pairStack.classList.add("layer-back");
     }
 
-    dressIndex = (dressIndex + 1) % dresses.length;
-    fillHanger(dressHanger, dresses[dressIndex]);
+    async function toggleLaundry(item, checked) {
+      if (!item) return;
+      item.laundry = checked;
+      try {
+        await updateDoc(doc(db, "items", item.id), { laundry: checked });
+      } catch (err) {
+        console.error("Failed to update laundry status:", err);
+        statusLine.textContent = "Couldn't update laundry status — check console.";
+      }
+    }
 
-    showDress();
-    statusLine.textContent = `Dress ${dressIndex + 1}/${dresses.length}`;
-  });
+    // ---- TOP ----
+    function renderTop() {
+      if (tops.length === 0) return;
+      const item = tops[topIndex];
+      fillHanger(topHanger, item);
+      topLaundryCheck.checked = !!item.laundry;
+      statusLine.textContent = `Top ${topIndex + 1}/${tops.length}`;
+      showPair();
+    }
 
-  loadItems();
-</script>
+    document.getElementById("topNextBtn").addEventListener("click", () => {
+      if (tops.length === 0) { statusLine.textContent = "No tops to show."; return; }
+      topIndex = (topIndex + 1) % tops.length;
+      renderTop();
+    });
+
+    document.getElementById("topBackBtn").addEventListener("click", () => {
+      if (tops.length === 0) { statusLine.textContent = "No tops to show."; return; }
+      topIndex = (topIndex - 1 + tops.length) % tops.length;
+      renderTop();
+    });
+
+    topLaundryCheck.addEventListener("change", () => {
+      if (topIndex >= 0) toggleLaundry(tops[topIndex], topLaundryCheck.checked);
+    });
+
+    // ---- BOTTOM ----
+    function renderBottom() {
+      if (bottoms.length === 0) return;
+      const item = bottoms[bottomIndex];
+      fillHanger(bottomHanger, item);
+      bottomLaundryCheck.checked = !!item.laundry;
+      statusLine.textContent = `Bottom ${bottomIndex + 1}/${bottoms.length}`;
+      showPair();
+    }
+
+    document.getElementById("bottomNextBtn").addEventListener("click", () => {
+      if (bottoms.length === 0) { statusLine.textContent = "No bottoms to show."; return; }
+      bottomIndex = (bottomIndex + 1) % bottoms.length;
+      renderBottom();
+    });
+
+    document.getElementById("bottomBackBtn").addEventListener("click", () => {
+      if (bottoms.length === 0) { statusLine.textContent = "No bottoms to show."; return; }
+      bottomIndex = (bottomIndex - 1 + bottoms.length) % bottoms.length;
+      renderBottom();
+    });
+
+    bottomLaundryCheck.addEventListener("change", () => {
+      if (bottomIndex >= 0) toggleLaundry(bottoms[bottomIndex], bottomLaundryCheck.checked);
+    });
+
+    // ---- DRESS ----
+    function renderDress() {
+      if (dresses.length === 0) return;
+      const item = dresses[dressIndex];
+      fillHanger(dressHanger, item);
+      dressLaundryCheck.checked = !!item.laundry;
+      statusLine.textContent = `Dress ${dressIndex + 1}/${dresses.length}`;
+      showDress();
+    }
+
+    document.getElementById("dressNextBtn").addEventListener("click", () => {
+      if (dresses.length === 0) { statusLine.textContent = "No dresses to show."; return; }
+      dressIndex = (dressIndex + 1) % dresses.length;
+      renderDress();
+    });
+
+    document.getElementById("dressBackBtn").addEventListener("click", () => {
+      if (dresses.length === 0) { statusLine.textContent = "No dresses to show."; return; }
+      dressIndex = (dressIndex - 1 + dresses.length) % dresses.length;
+      renderDress();
+    });
+
+    dressLaundryCheck.addEventListener("change", () => {
+      if (dressIndex >= 0) toggleLaundry(dresses[dressIndex], dressLaundryCheck.checked);
+    });
+
+    loadItems();
+  </script>
 
 </body>
 </html>
