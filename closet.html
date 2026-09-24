@@ -8,9 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600&display=swap" rel="stylesheet">
 
   <style>
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       font-family: 'Josefin Sans', sans-serif;
@@ -41,9 +39,7 @@
       font-weight: 600;
     }
 
-    .nav-btn:hover {
-      background: #e6762d;
-    }
+    .nav-btn:hover { background: #e6762d; }
 
     .closet-container {
       position: relative;
@@ -146,9 +142,7 @@
       transition: 0.2s;
     }
 
-    .control-row button:hover {
-      background: #e6762d;
-    }
+    .control-row button:hover { background: #e6762d; }
 
     .laundry-toggle {
       display: flex;
@@ -246,6 +240,8 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
+    // Only clean items live in these arrays — laundry items are filtered out on load
+    // and spliced out immediately when marked.
     let tops = [];
     let bottoms = [];
     let dresses = [];
@@ -272,12 +268,20 @@
           const data = { id: d.id, ...d.data() };
           if (typeof data.laundry !== "boolean") data.laundry = false;
 
+          // Skip anything already marked as laundry
+          if (data.laundry === true) return;
+
           if (data.type === "Top") tops.push(data);
           else if (data.type === "Bottom") bottoms.push(data);
           else if (data.type === "Dress") dresses.push(data);
         });
+
+        if (tops.length > 0) { topIndex = 0; renderTop(); }
+        if (bottoms.length > 0) { bottomIndex = 0; renderBottom(); }
+        if (dresses.length > 0) { dressIndex = 0; }
+
         statusLine.textContent =
-          `${tops.length} tops, ${bottoms.length} bottoms, ${dresses.length} dresses loaded`;
+          `${tops.length} clean tops, ${bottoms.length} clean bottoms, ${dresses.length} clean dresses`;
       } catch (err) {
         console.error("Failed to load items:", err);
         statusLine.textContent = "Couldn't load items — check console.";
@@ -286,8 +290,16 @@
 
     function fillHanger(el, item) {
       el.innerHTML = "";
-      const thumb = item?.photos?.[0];
 
+      if (!item) {
+        const msg = document.createElement("div");
+        msg.className = "empty-msg";
+        msg.textContent = "Nothing clean here!";
+        el.appendChild(msg);
+        return;
+      }
+
+      const thumb = item?.photos?.[0];
       if (thumb) {
         const img = document.createElement("img");
         img.src = thumb;
@@ -314,11 +326,10 @@
       pairStack.classList.add("layer-back");
     }
 
-    async function toggleLaundry(item, checked) {
+    async function markAsLaundry(item) {
       if (!item) return;
-      item.laundry = checked;
       try {
-        await updateDoc(doc(db, "items", item.id), { laundry: checked });
+        await updateDoc(doc(db, "items", item.id), { laundry: true });
       } catch (err) {
         console.error("Failed to update laundry status:", err);
         statusLine.textContent = "Couldn't update laundry status — check console.";
@@ -327,80 +338,98 @@
 
     // ---- TOP ----
     function renderTop() {
-      if (tops.length === 0) return;
-      const item = tops[topIndex];
+      const item = tops[topIndex] || null;
       fillHanger(topHanger, item);
-      topLaundryCheck.checked = !!item.laundry;
-      statusLine.textContent = `Top ${topIndex + 1}/${tops.length}`;
+      topLaundryCheck.checked = false;
+      statusLine.textContent = tops.length
+        ? `Top ${topIndex + 1}/${tops.length}`
+        : "No clean tops.";
       showPair();
     }
 
     document.getElementById("topNextBtn").addEventListener("click", () => {
-      if (tops.length === 0) { statusLine.textContent = "No tops to show."; return; }
+      if (tops.length === 0) { statusLine.textContent = "No clean tops."; return; }
       topIndex = (topIndex + 1) % tops.length;
       renderTop();
     });
 
     document.getElementById("topBackBtn").addEventListener("click", () => {
-      if (tops.length === 0) { statusLine.textContent = "No tops to show."; return; }
+      if (tops.length === 0) { statusLine.textContent = "No clean tops."; return; }
       topIndex = (topIndex - 1 + tops.length) % tops.length;
       renderTop();
     });
 
-    topLaundryCheck.addEventListener("change", () => {
-      if (topIndex >= 0) toggleLaundry(tops[topIndex], topLaundryCheck.checked);
+    topLaundryCheck.addEventListener("change", async () => {
+      if (!topLaundryCheck.checked || topIndex < 0 || tops.length === 0) return;
+      const item = tops[topIndex];
+      await markAsLaundry(item);
+      tops.splice(topIndex, 1);
+      if (topIndex >= tops.length) topIndex = tops.length - 1; // clamp
+      renderTop();
     });
 
     // ---- BOTTOM ----
     function renderBottom() {
-      if (bottoms.length === 0) return;
-      const item = bottoms[bottomIndex];
+      const item = bottoms[bottomIndex] || null;
       fillHanger(bottomHanger, item);
-      bottomLaundryCheck.checked = !!item.laundry;
-      statusLine.textContent = `Bottom ${bottomIndex + 1}/${bottoms.length}`;
+      bottomLaundryCheck.checked = false;
+      statusLine.textContent = bottoms.length
+        ? `Bottom ${bottomIndex + 1}/${bottoms.length}`
+        : "No clean bottoms.";
       showPair();
     }
 
     document.getElementById("bottomNextBtn").addEventListener("click", () => {
-      if (bottoms.length === 0) { statusLine.textContent = "No bottoms to show."; return; }
+      if (bottoms.length === 0) { statusLine.textContent = "No clean bottoms."; return; }
       bottomIndex = (bottomIndex + 1) % bottoms.length;
       renderBottom();
     });
 
     document.getElementById("bottomBackBtn").addEventListener("click", () => {
-      if (bottoms.length === 0) { statusLine.textContent = "No bottoms to show."; return; }
+      if (bottoms.length === 0) { statusLine.textContent = "No clean bottoms."; return; }
       bottomIndex = (bottomIndex - 1 + bottoms.length) % bottoms.length;
       renderBottom();
     });
 
-    bottomLaundryCheck.addEventListener("change", () => {
-      if (bottomIndex >= 0) toggleLaundry(bottoms[bottomIndex], bottomLaundryCheck.checked);
+    bottomLaundryCheck.addEventListener("change", async () => {
+      if (!bottomLaundryCheck.checked || bottomIndex < 0 || bottoms.length === 0) return;
+      const item = bottoms[bottomIndex];
+      await markAsLaundry(item);
+      bottoms.splice(bottomIndex, 1);
+      if (bottomIndex >= bottoms.length) bottomIndex = bottoms.length - 1;
+      renderBottom();
     });
 
     // ---- DRESS ----
     function renderDress() {
-      if (dresses.length === 0) return;
-      const item = dresses[dressIndex];
+      const item = dresses[dressIndex] || null;
       fillHanger(dressHanger, item);
-      dressLaundryCheck.checked = !!item.laundry;
-      statusLine.textContent = `Dress ${dressIndex + 1}/${dresses.length}`;
+      dressLaundryCheck.checked = false;
+      statusLine.textContent = dresses.length
+        ? `Dress ${dressIndex + 1}/${dresses.length}`
+        : "No clean dresses.";
       showDress();
     }
 
     document.getElementById("dressNextBtn").addEventListener("click", () => {
-      if (dresses.length === 0) { statusLine.textContent = "No dresses to show."; return; }
+      if (dresses.length === 0) { statusLine.textContent = "No clean dresses."; return; }
       dressIndex = (dressIndex + 1) % dresses.length;
       renderDress();
     });
 
     document.getElementById("dressBackBtn").addEventListener("click", () => {
-      if (dresses.length === 0) { statusLine.textContent = "No dresses to show."; return; }
+      if (dresses.length === 0) { statusLine.textContent = "No clean dresses."; return; }
       dressIndex = (dressIndex - 1 + dresses.length) % dresses.length;
       renderDress();
     });
 
-    dressLaundryCheck.addEventListener("change", () => {
-      if (dressIndex >= 0) toggleLaundry(dresses[dressIndex], dressLaundryCheck.checked);
+    dressLaundryCheck.addEventListener("change", async () => {
+      if (!dressLaundryCheck.checked || dressIndex < 0 || dresses.length === 0) return;
+      const item = dresses[dressIndex];
+      await markAsLaundry(item);
+      dresses.splice(dressIndex, 1);
+      if (dressIndex >= dresses.length) dressIndex = dresses.length - 1;
+      renderDress();
     });
 
     loadItems();

@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Laundry Basket</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: 'Josefin Sans', sans-serif;
+      background: #b7008c;
+      color: #ffffff;
+      margin: 0;
+      padding: 30px;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 40px;
+      margin-bottom: 10px;
+    }
+
+    .top-nav {
+      width: 100%;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .nav-btn {
+      background: #fe8e3d;
+      color: white;
+      padding: 10px 16px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      margin: 0 6px;
+      display: inline-block;
+    }
+
+    .nav-btn:hover { background: #e6762d; }
+
+    #statusLine {
+      text-align: center;
+      font-size: 14px;
+      color: #ffe0f5;
+      margin-bottom: 10px;
+    }
+
+    #basketGrid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 25px;
+      padding: 20px 0;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .laundry-card {
+      background: white;
+      color: #b7008c;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .laundry-card img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+    }
+
+    .laundry-card .no-img {
+      width: 100%;
+      height: 180px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f2f2f2;
+      color: #aaa;
+      font-style: italic;
+    }
+
+    .laundry-info {
+      padding: 12px;
+      flex: 1;
+    }
+
+    .laundry-info .title {
+      font-weight: 700;
+      font-size: 18px;
+      margin-bottom: 4px;
+    }
+
+    .laundry-info .type {
+      font-size: 14px;
+      color: #999;
+      margin-bottom: 10px;
+    }
+
+    .unmark-btn {
+      background: #fe8e3d;
+      color: white;
+      border: none;
+      width: 100%;
+      padding: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .unmark-btn:hover { background: #e6762d; }
+
+    .empty-basket {
+      text-align: center;
+      grid-column: 1 / -1;
+      color: #ffe0f5;
+      font-style: italic;
+      margin-top: 40px;
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="top-nav">
+    <a href="index.html" class="nav-btn">Home!</a>
+    <a href="closet.html" class="nav-btn">Closet</a>
+  </div>
+
+  <h1>Laundry Basket 🧺</h1>
+  <div id="statusLine"></div>
+
+  <div id="basketGrid"></div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import {
+      getFirestore, collection, getDocs, query, doc, updateDoc
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyCdKB6yoYhJpN2cdSj29v_IKiYet88jOaY",
+        authDomain: "gs-closet.firebaseapp.com",
+        projectId: "gs-closet",
+        storageBucket: "gs-closet.firebasestorage.app",
+        messagingSenderId: "851094693820",
+        appId: "1:851094693820:web:c33a7f98acbee0302fedb9",
+        measurementId: "G-SE8P9F671F"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const basketGrid = document.getElementById("basketGrid");
+    const statusLine = document.getElementById("statusLine");
+
+    let laundryItems = [];
+
+    async function loadLaundry() {
+      try {
+        const q = query(collection(db, "items"));
+        const snapshot = await getDocs(q);
+
+        laundryItems = [];
+        snapshot.forEach(d => {
+          const data = { id: d.id, ...d.data() };
+          if (data.laundry === true) laundryItems.push(data);
+        });
+
+        renderBasket();
+      } catch (err) {
+        console.error("Failed to load laundry items:", err);
+        statusLine.textContent = "Couldn't load laundry items — check console.";
+      }
+    }
+
+    function renderBasket() {
+      basketGrid.innerHTML = "";
+
+      statusLine.textContent = `${laundryItems.length} item(s) in the laundry`;
+
+      if (laundryItems.length === 0) {
+        const empty = document.createElement("div");
+        empty.className = "empty-basket";
+        empty.textContent = "Nothing in the laundry right now!";
+        basketGrid.appendChild(empty);
+        return;
+      }
+
+      laundryItems.forEach(item => {
+        const card = document.createElement("div");
+        card.className = "laundry-card";
+
+        const thumb = item.photos?.[0];
+
+        card.innerHTML = `
+          ${thumb
+            ? `<img src="${thumb}">`
+            : `<div class="no-img">No Image</div>`}
+          <div class="laundry-info">
+            <div class="title">${item.title || "Untitled"}</div>
+            <div class="type">${item.type || ""}</div>
+          </div>
+          <button class="unmark-btn">Mark as Clean</button>
+        `;
+
+        card.querySelector(".unmark-btn").addEventListener("click", () => unmarkLaundry(item));
+
+        basketGrid.appendChild(card);
+      });
+    }
+
+    async function unmarkLaundry(item) {
+      try {
+        await updateDoc(doc(db, "items", item.id), { laundry: false });
+        laundryItems = laundryItems.filter(i => i.id !== item.id);
+        renderBasket();
+      } catch (err) {
+        console.error("Failed to unmark item:", err);
+        statusLine.textContent = "Couldn't update item — check console.";
+      }
+    }
+
+    loadLaundry();
+  </script>
+
+</body>
+</html>
