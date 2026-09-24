@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Hit Fits</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: 'Josefin Sans', sans-serif;
+      background: #b7008c;
+      color: #ffffff;
+      margin: 0;
+      padding: 30px;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 40px;
+      margin-bottom: 10px;
+    }
+
+    .top-nav {
+      width: 100%;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .nav-btn {
+      background: #fe8e3d;
+      color: white;
+      padding: 10px 16px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      margin: 0 6px;
+      display: inline-block;
+    }
+
+    .nav-btn:hover { background: #e6762d; }
+
+    .logger {
+      background: white;
+      color: #b7008c;
+      border-radius: 12px;
+      padding: 20px;
+      max-width: 500px;
+      margin: 0 auto 30px auto;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+
+    .mode-toggle {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    .mode-toggle button {
+      flex: 1;
+      padding: 10px;
+      border: 2px solid #b7008c;
+      background: white;
+      color: #b7008c;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 15px;
+    }
+
+    .mode-toggle button.active {
+      background: #b7008c;
+      color: white;
+    }
+
+    label {
+      font-weight: 600;
+      display: block;
+      margin-top: 12px;
+      margin-bottom: 5px;
+    }
+
+    select, input, textarea {
+      width: 100%;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-family: inherit;
+      font-size: 15px;
+    }
+
+    textarea {
+      height: 60px;
+      resize: vertical;
+    }
+
+    .log-btn {
+      margin-top: 18px;
+      width: 100%;
+      padding: 12px;
+      background: #fe8e3d;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 17px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .log-btn:hover { background: #e6762d; }
+
+    #statusLine {
+      text-align: center;
+      font-size: 14px;
+      color: #ffe0f5;
+      margin-bottom: 10px;
+    }
+
+    #historyGrid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 25px;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding-bottom: 30px;
+    }
+
+    .fit-card {
+      background: white;
+      color: #b7008c;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .fit-photos {
+      display: flex;
+    }
+
+    .fit-photos img {
+      width: 50%;
+      height: 160px;
+      object-fit: cover;
+    }
+
+    .fit-photos.single img {
+      width: 100%;
+    }
+
+    .fit-photos .no-img {
+      width: 50%;
+      height: 160px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f2f2f2;
+      color: #aaa;
+      font-style: italic;
+      font-size: 13px;
+    }
+
+    .fit-info {
+      padding: 12px;
+      flex: 1;
+    }
+
+    .fit-info .titles {
+      font-weight: 700;
+      font-size: 16px;
+      margin-bottom: 4px;
+    }
+
+    .fit-info .occasion {
+      font-size: 14px;
+      color: #555;
+      margin-bottom: 6px;
+      font-style: italic;
+    }
+
+    .fit-info .date {
+      font-size: 12px;
+      color: #999;
+    }
+
+    .delete-btn {
+      background: #eee;
+      color: #b7008c;
+      border: none;
+      width: 100%;
+      padding: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .delete-btn:hover { background: #ddd; }
+
+    .empty-history {
+      grid-column: 1 / -1;
+      text-align: center;
+      color: #ffe0f5;
+      font-style: italic;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="top-nav">
+    <a href="index.html" class="nav-btn">Home!</a>
+    <a href="closet.html" class="nav-btn">Closet</a>
+    <a href="laundry.html" class="nav-btn">Laundry</a>
+  </div>
+
+  <h1>Hit Fits 🔥</h1>
+
+  <div class="logger">
+    <div class="mode-toggle">
+      <button id="pairModeBtn" class="active">Top + Bottom</button>
+      <button id="dressModeBtn">Dress</button>
+    </div>
+
+    <div id="pairFields">
+      <label>Top</label>
+      <select id="topSelect"><option value="">Loading...</option></select>
+
+      <label>Bottom</label>
+      <select id="bottomSelect"><option value="">Loading...</option></select>
+    </div>
+
+    <div id="dressFields" style="display:none;">
+      <label>Dress</label>
+      <select id="dressSelect"><option value="">Loading...</option></select>
+    </div>
+
+    <label>Occasion / Notes (optional)</label>
+    <textarea id="occasionInput" placeholder="e.g. Friday dinner, job interview, errands..."></textarea>
+
+    <button id="logBtn" class="log-btn">Log This Fit</button>
+  </div>
+
+  <div id="statusLine"></div>
+  <div id="historyGrid"></div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import {
+      getFirestore, collection, getDocs, query, addDoc, deleteDoc, doc, orderBy
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyCdKB6yoYhJpN2cdSj29v_IKiYet88jOaY",
+        authDomain: "gs-closet.firebaseapp.com",
+        projectId: "gs-closet",
+        storageBucket: "gs-closet.firebasestorage.app",
+        messagingSenderId: "851094693820",
+        appId: "1:851094693820:web:c33a7f98acbee0302fedb9",
+        measurementId: "G-SE8P9F671F"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const statusLine = document.getElementById("statusLine");
+    const topSelect = document.getElementById("topSelect");
+    const bottomSelect = document.getElementById("bottomSelect");
+    const dressSelect = document.getElementById("dressSelect");
+    const occasionInput = document.getElementById("occasionInput");
+    const historyGrid = document.getElementById("historyGrid");
+
+    const pairModeBtn = document.getElementById("pairModeBtn");
+    const dressModeBtn = document.getElementById("dressModeBtn");
+    const pairFields = document.getElementById("pairFields");
+    const dressFields = document.getElementById("dressFields");
+
+    let mode = "pair"; // or "dress"
+    let allItems = [];
+    let outfitHistory = [];
+
+    pairModeBtn.addEventListener("click", () => {
+      mode = "pair";
+      pairModeBtn.classList.add("active");
+      dressModeBtn.classList.remove("active");
+      pairFields.style.display = "block";
+      dressFields.style.display = "none";
+    });
+
+    dressModeBtn.addEventListener("click", () => {
+      mode = "dress";
+      dressModeBtn.classList.add("active");
+      pairModeBtn.classList.remove("active");
+      dressFields.style.display = "block";
+      pairFields.style.display = "none";
+    });
+
+    function populateSelect(selectEl, items, placeholder) {
+      selectEl.innerHTML = "";
+      if (items.length === 0) {
+        selectEl.innerHTML = `<option value="">${placeholder}</option>`;
+        return;
+      }
+      items.forEach(item => {
+        const opt = document.createElement("option");
+        opt.value = item.id;
+        opt.textContent = item.title || "Untitled";
+        selectEl.appendChild(opt);
+      });
+    }
+
+    async function loadClosetItems() {
+      const q = query(collection(db, "items"));
+      const snapshot = await getDocs(q);
+      allItems = [];
+      snapshot.forEach(d => allItems.push({ id: d.id, ...d.data() }));
+
+      const tops = allItems.filter(i => i.type === "Top");
+      const bottoms = allItems.filter(i => i.type === "Bottom");
+      const dresses = allItems.filter(i => i.type === "Dress");
+
+      populateSelect(topSelect, tops, "No tops found");
+      populateSelect(bottomSelect, bottoms, "No bottoms found");
+      populateSelect(dressSelect, dresses, "No dresses found");
+    }
+
+    function findItem(id) {
+      return allItems.find(i => i.id === id) || null;
+    }
+
+    document.getElementById("logBtn").addEventListener("click", async () => {
+      const occasion = occasionInput.value.trim();
+
+      let outfitData = {
+        mode,
+        occasion,
+        createdAt: new Date()
+      };
+
+      if (mode === "pair") {
+        const top = findItem(topSelect.value);
+        const bottom = findItem(bottomSelect.value);
+
+        if (!top || !bottom) {
+          statusLine.textContent = "Pick both a top and a bottom first.";
+          return;
+        }
+
+        outfitData = {
+          ...outfitData,
+          topId: top.id,
+          topTitle: top.title || "",
+          topPhoto: top.photos?.[0] || "",
+          topColor: top.color || [],
+          bottomId: bottom.id,
+          bottomTitle: bottom.title || "",
+          bottomPhoto: bottom.photos?.[0] || "",
+          bottomColor: bottom.color || [],
+          appropriateness: top.appropriateness || "",
+          functionality: top.functionality || ""
+        };
+      } else {
+        const dress = findItem(dressSelect.value);
+
+        if (!dress) {
+          statusLine.textContent = "Pick a dress first.";
+          return;
+        }
+
+        outfitData = {
+          ...outfitData,
+          dressId: dress.id,
+          dressTitle: dress.title || "",
+          dressPhoto: dress.photos?.[0] || "",
+          dressColor: dress.color || [],
+          appropriateness: dress.appropriateness || "",
+          functionality: dress.functionality || ""
+        };
+      }
+
+      try {
+        await addDoc(collection(db, "outfits"), outfitData);
+        occasionInput.value = "";
+        statusLine.textContent = "Fit logged!";
+        await loadHistory();
+      } catch (err) {
+        console.error("Failed to log outfit:", err);
+        statusLine.textContent = "Couldn't log outfit — check console.";
+      }
+    });
+
+    async function loadHistory() {
+      try {
+        const q = query(collection(db, "outfits"), orderBy("createdAt", "desc"));
+        const snapshot = await getDocs(q);
+        outfitHistory = [];
+        snapshot.forEach(d => outfitHistory.push({ id: d.id, ...d.data() }));
+        renderHistory();
+      } catch (err) {
+        console.error("Failed to load outfit history:", err);
+        historyGrid.innerHTML = `<div class="empty-history">Couldn't load history.</div>`;
+      }
+    }
+
+    function formatDate(ts) {
+      try {
+        const d = ts?.toDate ? ts.toDate() : new Date(ts);
+        return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+      } catch {
+        return "";
+      }
+    }
+
+    function renderHistory() {
+      historyGrid.innerHTML = "";
+
+      if (outfitHistory.length === 0) {
+        historyGrid.innerHTML = `<div class="empty-history">No fits logged yet — log your first one above!</div>`;
+        return;
+      }
+
+      outfitHistory.forEach(fit => {
+        const card = document.createElement("div");
+        card.className = "fit-card";
+
+        let photosHtml = "";
+        let titlesText = "";
+
+        if (fit.mode === "dress") {
+          photosHtml = fit.dressPhoto
+            ? `<div class="fit-photos single"><img src="${fit.dressPhoto}"></div>`
+            : `<div class="fit-photos single"><div class="no-img">No Image</div></div>`;
+          titlesText = fit.dressTitle || "Untitled Dress";
+        } else {
+          photosHtml = `
+            <div class="fit-photos">
+              ${fit.topPhoto ? `<img src="${fit.topPhoto}">` : `<div class="no-img">No Image</div>`}
+              ${fit.bottomPhoto ? `<img src="${fit.bottomPhoto}">` : `<div class="no-img">No Image</div>`}
+            </div>
+          `;
+          titlesText = `${fit.topTitle || "Untitled Top"} + ${fit.bottomTitle || "Untitled Bottom"}`;
+        }
+
+        card.innerHTML = `
+          ${photosHtml}
+          <div class="fit-info">
+            <div class="titles">${titlesText}</div>
+            ${fit.occasion ? `<div class="occasion">${fit.occasion}</div>` : ""}
+            <div class="date">${formatDate(fit.createdAt)}</div>
+          </div>
+          <button class="delete-btn">Delete Log</button>
+        `;
+
+        card.querySelector(".delete-btn").addEventListener("click", () => deleteFit(fit.id));
+
+        historyGrid.appendChild(card);
+      });
+    }
+
+    async function deleteFit(id) {
+      try {
+        await deleteDoc(doc(db, "outfits", id));
+        outfitHistory = outfitHistory.filter(f => f.id !== id);
+        renderHistory();
+      } catch (err) {
+        console.error("Failed to delete outfit log:", err);
+        statusLine.textContent = "Couldn't delete log — check console.";
+      }
+    }
+
+    async function init() {
+      await loadClosetItems();
+      await loadHistory();
+    }
+
+    init();
+  </script>
+
+</body>
+</html>
